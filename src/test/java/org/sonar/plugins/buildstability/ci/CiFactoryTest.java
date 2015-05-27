@@ -20,8 +20,6 @@
 package org.sonar.plugins.buildstability.ci;
 
 import org.junit.Test;
-import org.sonar.plugins.buildstability.ci.bamboo.BambooServer;
-import org.sonar.plugins.buildstability.ci.jenkins.JenkinsServer;
 import org.sonar.plugins.buildstability.ci.teamcity.TeamCityServer;
 
 import static org.fest.assertions.Assertions.assertThat;
@@ -30,26 +28,6 @@ import static org.fest.assertions.Assertions.assertThat;
  * @author Julien HENRY
  */
 public class CiFactoryTest {
-
-  @Test
-  public void testCreateBamboo() {
-    CiConnector connector = CiFactory.create("Bamboo", "http://bamboo/browse/", "user", "pwd", false);
-
-    assertThat(connector.getServer().getUsername()).isEqualTo("user");
-    assertThat(connector.getServer().getPassword()).isEqualTo("pwd");
-    assertThat(connector.getServer().getHost()).isEqualTo("http://bamboo");
-    assertThat(connector.getServer()).isInstanceOf(BambooServer.class);
-  }
-
-  @Test
-  public void testCreateJenkins() {
-    CiConnector connector = CiFactory.create("Jenkins", "http://jenkins/job/", "user", "pwd", false);
-
-    assertThat(connector.getServer().getUsername()).isEqualTo("user");
-    assertThat(connector.getServer().getPassword()).isEqualTo("pwd");
-    assertThat(connector.getServer().getHost()).isEqualTo("http://jenkins");
-    assertThat(connector.getServer()).isInstanceOf(JenkinsServer.class);
-  }
 
   @Test
   public void testCreateTeamCity() {

@@ -21,8 +21,6 @@ package org.sonar.plugins.buildstability.ci;
 
 import org.apache.commons.lang.StringUtils;
 import org.sonar.plugins.buildstability.ci.api.AbstractServer;
-import org.sonar.plugins.buildstability.ci.bamboo.BambooServer;
-import org.sonar.plugins.buildstability.ci.jenkins.JenkinsServer;
 import org.sonar.plugins.buildstability.ci.teamcity.TeamCityServer;
 
 /**
@@ -50,14 +48,7 @@ public final class CiFactory {
   public static CiConnector create(String system, String url, String username, String password, boolean useJSecurityCheck) {
     AbstractServer server;
     String pattern;
-    if (BambooServer.SYSTEM.equalsIgnoreCase(system)) {
-      server = new BambooServer();
-      pattern = BambooServer.PATTERN;
-    } else if (JenkinsServer.SYSTEM.equalsIgnoreCase(system)) {
-      server = new JenkinsServer();
-      ((JenkinsServer) server).setUseJSecurityCheck(useJSecurityCheck);
-      pattern = JenkinsServer.PATTERN;
-    } else if (TeamCityServer.SYSTEM.equalsIgnoreCase(system)) {
+    if (TeamCityServer.SYSTEM.equalsIgnoreCase(system)) {
       server = new TeamCityServer();
       pattern = TeamCityServer.PATTERN;
     } else {

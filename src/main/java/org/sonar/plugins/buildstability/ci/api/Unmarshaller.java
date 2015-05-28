@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -19,6 +19,8 @@
  */
 package org.sonar.plugins.buildstability.ci.api;
 
+import java.util.List;
+
 import org.dom4j.Element;
 
 /**
@@ -26,4 +28,5 @@ import org.dom4j.Element;
  */
 public interface Unmarshaller<MODEL extends Model> {
   MODEL toModel(Element domElement);
+  List<MODEL> toManyModel(Element domElement);
 }

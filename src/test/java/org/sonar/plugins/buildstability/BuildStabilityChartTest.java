@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or

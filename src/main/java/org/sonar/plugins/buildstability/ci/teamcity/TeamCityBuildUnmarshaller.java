@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@
 package org.sonar.plugins.buildstability.ci.teamcity;
 
 import org.dom4j.Element;
+import org.dom4j.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.plugins.buildstability.ci.api.Build;
@@ -27,7 +28,9 @@ import org.sonar.plugins.buildstability.ci.api.Unmarshaller;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Alexei Guevara <alguevara@kijiji.ca>
@@ -47,13 +50,31 @@ public class TeamCityBuildUnmarshaller implements Unmarshaller<Build> {
 
     String result = domElement.attributeValue("status");
 
-    build.setNumber(Integer.parseInt(domElement.attributeValue("number")));
+    LOG.debug("Parsing build detail: number: {}", domElement.attributeValue("number"));
+    
+    build.setNumber(domElement.attributeValue("number"));
     build.setTimestamp(getTimeStamp(domElement.elementText("startDate")));
     build.setResult(result);
     build.setDuration(calculateDuration(domElement.elementText("startDate"), domElement.elementText("finishDate")));
     build.setSuccessful("SUCCESS".equalsIgnoreCase(result));
 
     return build;
+  }
+
+  @Override
+  public List<Build> toManyModel(Element domElement) {
+    List<Build> builds = new ArrayList<Build>();
+    
+    List<? extends Element> buildElements = domElement.elements();
+    for (Element e : buildElements) {      
+      LOG.debug("Parsing build summary: number: {}", e.attributeValue("number"));
+      
+      Build build = new Build();
+      build.setNumber(e.attributeValue("number"));
+      builds.add(build);
+    }
+    
+    return builds;
   }
 
   private long getTimeStamp(String startDate) {
@@ -81,5 +102,6 @@ public class TeamCityBuildUnmarshaller implements Unmarshaller<Build> {
       return null;
     }
   }
+
 
 }

@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -47,7 +47,7 @@ public class TeamCityBuildUnmarshallerTest {
     InputStream result = this.getClass().getResourceAsStream("result.xml");
     Document doc = reader.read(result);
     Build b = unmarshaller.toModel(doc.getRootElement());
-    assertThat(b.getNumber()).isEqualTo(6);
+    assertThat(b.getNumberAsInteger()).isEqualTo(6);
     assertThat(b.isSuccessful()).isTrue();
     assertThat(b.getTimestamp()).isGreaterThan(0);
     assertThat(b.getDuration()).isGreaterThan(0);

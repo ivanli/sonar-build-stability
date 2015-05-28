@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -28,6 +28,11 @@ import org.sonar.plugins.buildstability.ci.api.Build;
 import org.sonar.plugins.buildstability.ci.api.Unmarshaller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * See <a href="http://confluence.jetbrains.com/display/TW/REST+API+Plugin#RESTAPIPlugin-Usage">TeamCity REST APIs</a>.
@@ -44,6 +49,28 @@ public class TeamCityServer extends AbstractServer {
     StringBuilder sb = new StringBuilder(getHost())
       .append("/httpAuth/app/rest/buildTypes/id:").append(getKey()).append("/builds/number:").append(number);
     return sb.toString();
+  }
+  
+  @Override
+  public String getBuildUrlSince(Date date) {
+    StringBuilder dateTime = new StringBuilder()
+      .append(new SimpleDateFormat("yyyyMMdd").format(date))
+      .append("T")
+      .append(new SimpleDateFormat("HHmmss").format(date))
+      .append(new SimpleDateFormat("Z").format(date));
+    
+    StringBuilder sb;
+    try {
+      sb = new StringBuilder(getHost())
+        .append("/httpAuth/app/rest/buildTypes/id:")
+        .append(getKey())
+        .append("/builds?sinceDate=")
+        .append(URLEncoder.encode(dateTime.toString(), "UTF-8"));
+
+      return sb.toString();
+    } catch (UnsupportedEncodingException e) { }
+    
+    return null;
   }
 
   @Override

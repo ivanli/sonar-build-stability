@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@ public class Build implements Model {
   /**
    * Build number.
    */
-  private int number;
+  private String number;
 
   /**
    * Build result.
@@ -53,6 +53,14 @@ public class Build implements Model {
   private long timestamp;
 
   public Build(int number, long timestamp, String result, boolean successful, double duration) {
+    this.number = Integer.toString(number);
+    this.timestamp = timestamp;
+    this.result = result;
+    this.successful = successful;
+    this.duration = duration;
+  }
+  
+  public Build(String number, long timestamp, String result, boolean successful, double duration) {
     this.number = number;
     this.timestamp = timestamp;
     this.result = result;
@@ -63,11 +71,19 @@ public class Build implements Model {
   public Build() {
   }
 
-  public int getNumber() {
+  public int getNumberAsInteger() {
+    return Integer.parseInt(number);
+  }
+  
+  public String getNumberAsString() {
     return number;
   }
 
   public void setNumber(int number) {
+    this.number = String.valueOf(number);
+  }
+  
+  public void setNumber(String number) {
     this.number = number;
   }
 

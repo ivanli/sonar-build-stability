@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -79,41 +79,38 @@ public class CiConnector {
     return server.getBuildUnmarshaller().toModel(dom.getRootElement());
   }
 
-  protected Build getBuild(int number) throws IOException {
-    return getBuild(String.valueOf(number));
-  }
+//  protected Build getBuild(int number) throws IOException {
+//    return getBuild(String.valueOf(number));
+//  }
 
-  public List<Build> getBuilds(int count) throws IOException {
-    server.doLogin(client);
-    List<Build> builds = new ArrayList<Build>();
-    Build last = getLastBuild();
-    if (last != null) {
-      builds.add(last);
-      for (int i = 1; i < count; i++) {
-        Build previous = getBuild(last.getNumber() - i);
-        if (previous != null) {
-          builds.add(previous);
-        }
-      }
-    }
-    return builds;
-  }
-
+//  public List<Build> getBuilds(int count) throws IOException {
+//    server.doLogin(client);
+//    List<Build> builds = new ArrayList<Build>();
+//    Build last = getLastBuild();
+//    if (last != null) {
+//      builds.add(last);
+//      for (int i = 1; i < count; i++) {
+//        Build previous = getBuild(last.getNumberAsInteger() - i);
+//        if (previous != null) {
+//          builds.add(previous);
+//        }
+//      }
+//    }
+//    return builds;
+//  }
+  
   public List<Build> getBuildsSince(Date date) throws IOException {
     server.doLogin(client);
-    List<Build> builds = new ArrayList<Build>();
-    Build current = getLastBuild();
-    int number = current != null ? current.getNumber() : 0;
-    while (number > 0 && (current == null || date.before(current.getDate()))) {
-      if (current != null) {
-        builds.add(current);
-      }
-      number--;
-      if (number > 0) {
-        current = getBuild(number);
-      }
-    }
-    return builds;
+    Document dom = executeGet(server.getBuildUrlSince(date));
+    
+    List<Build> buildSummaries = server.getBuildUnmarshaller().toManyModel(dom.getRootElement());
+    LOG.debug("Found {} builds since {}", buildSummaries.size(), date);
+    
+    List<Build> buildDetails = new ArrayList<Build>();
+    for (Build build : buildSummaries)
+      buildDetails.add(getBuild(build.getNumberAsString()));
+    
+    return buildDetails;
   }
 
   protected Document executeGet(String url) throws IOException {

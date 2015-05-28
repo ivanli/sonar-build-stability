@@ -1,6 +1,6 @@
 /*
- * Sonar Build Stability Plugin
- * Copyright (C) 2010 SonarSource
+ * Sonar Build TeamCity Plugin
+ * Copyright (C) 2015 Ivan Li
  * dev@sonar.codehaus.org
  *
  * This program is free software; you can redistribute it and/or
@@ -35,7 +35,10 @@ import org.sonar.plugins.buildstability.ci.api.Build;
 
 import javax.annotation.Nullable;
 
+import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Evgeny Mandrikov
@@ -116,12 +119,12 @@ public class BuildStabilitySensor implements Sensor {
     Collections.sort(builds, new Comparator<Build>() {
       @Override
       public int compare(Build o1, Build o2) {
-        return o1.getNumber() - o2.getNumber();
+        return (int) (o1.getTimestamp() - o2.getTimestamp()); 
       }
     });
 
-    PropertiesBuilder<Integer, Double> durationsBuilder = new PropertiesBuilder<Integer, Double>(BuildStabilityMetrics.DURATIONS);
-    PropertiesBuilder<Integer, String> resultsBuilder = new PropertiesBuilder<Integer, String>(BuildStabilityMetrics.RESULTS);
+    PropertiesBuilder<String, Double> durationsBuilder = new PropertiesBuilder<String, Double>(BuildStabilityMetrics.DURATIONS);
+    PropertiesBuilder<String, String> resultsBuilder = new PropertiesBuilder<String, String>(BuildStabilityMetrics.RESULTS);
 
     double successful = 0;
     double failed = 0;
@@ -136,33 +139,37 @@ public class BuildStabilitySensor implements Sensor {
     Build firstFailed = null;
 
     for (Build build : builds) {
-      LOG.debug(build.toString());
+      LOG.debug("Analysing build: {}.", build.toString());
 
-      int buildNumber = build.getNumber();
+      String buildNumber = build.getNumberAsString();
       double buildDuration = build.getDuration();
       resultsBuilder.add(buildNumber, build.isSuccessful() ? "g" : "r");
       durationsBuilder.add(buildNumber, buildDuration / 1000);
       if (build.isSuccessful()) {
+        LOG.debug("  Successful.");
+        
         successful++;
         duration += buildDuration;
         shortest = Math.min(shortest, buildDuration);
         longest = Math.max(longest, buildDuration);
+        
         if (firstFailed != null) {
-          // Build fixed
-          long buildsToFix = ((long) build.getNumber()) - firstFailed.getNumber();
+          // Change in build state detected. Working out stats related to failure duration.
+          LOG.debug("  First success after failure.");
+          int buildsToFix = builds.indexOf(build) - builds.indexOf(firstFailed);
           totalBuildsToFix += buildsToFix;
+          
           double timeToFix = build.getTimestamp() - firstFailed.getTimestamp();
           totalTimeToFix += timeToFix;
           longestTimeToFix = Math.max(longestTimeToFix, timeToFix);
+          
           fixes++;
           firstFailed = null;
         }
-      } else {
+      } else {        
         failed++;
-        if (firstFailed == null) {
-          // Build failed
+        if (firstFailed == null)
           firstFailed = build;
-        }
       }
     }
 
@@ -199,3 +206,40 @@ public class BuildStabilitySensor implements Sensor {
     return "Build Stability";
   }
 }
+
+// Saving compare algorithm 
+//public int compare(Build o1, Build o2) {
+//  final int MAJOR_VER_GROUP = 1;
+//  final int MINOR_VER_GROUP = 2;
+//  final int PATCH_VER_GROUP = 3;
+//  
+//  LOG.debug("Comparing builds: {} & {}", o1.getNumberAsString(), o2.getNumberAsString());
+//  
+//  // Use regex to search for X.X.X patterned version numbers
+//  Pattern verPattern = Pattern.compile("([^.\\s]+)(?:\\.([^.\\s]+))?(?:\\.([^.\\s]+))?");
+//  Matcher o1Matcher = verPattern.matcher(o1.getNumberAsString());
+//  Matcher o2Matcher = verPattern.matcher(o2.getNumberAsString());
+//  
+//  // Check for incompatible patterns. Mismatch between number of sw version groups.
+//  if ((o1Matcher.group(MINOR_VER_GROUP).isEmpty() && !o2Matcher.group(MINOR_VER_GROUP).isEmpty()) ||
+//      (!o1Matcher.group(MINOR_VER_GROUP).isEmpty() && o2Matcher.group(MINOR_VER_GROUP).isEmpty()) ||
+//      (!o1Matcher.group(PATCH_VER_GROUP).isEmpty() && o2Matcher.group(PATCH_VER_GROUP).isEmpty()) ||
+//      (!o1Matcher.group(PATCH_VER_GROUP).isEmpty() && o2Matcher.group(PATCH_VER_GROUP).isEmpty()))
+//  {
+//    throw new NumberFormatException(MessageFormat.format("Build numbers formats do not match between {0} and {1}", o1.getNumberAsString(), o2.getNumberAsString()));
+//  }
+//  
+//  int majorDiff = Integer.valueOf(o1Matcher.group(MAJOR_VER_GROUP)) - Integer.valueOf(o2Matcher.group(MAJOR_VER_GROUP));
+//  if (majorDiff != 0 || o1Matcher.group(MINOR_VER_GROUP).isEmpty())
+//    return majorDiff;
+//  
+//  int minorDiff = Integer.valueOf(o1Matcher.group(MINOR_VER_GROUP)) - Integer.valueOf(o2Matcher.group(MINOR_VER_GROUP));
+//  if (minorDiff != 0 || o1Matcher.group(PATCH_VER_GROUP).isEmpty())
+//    return minorDiff;
+//  
+//  int patchDiff = Integer.valueOf(o1Matcher.group(PATCH_VER_GROUP)) - Integer.valueOf(o2Matcher.group(PATCH_VER_GROUP));
+//  if (patchDiff != 0)
+//    return patchDiff;
+//  
+//  return 0;
+//}
